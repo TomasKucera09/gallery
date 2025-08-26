@@ -3,11 +3,7 @@
 -- ===========================================
 
 -- Create database if not exists
-CREATE DATABASE IF NOT EXISTS `photogallery` 
-CHARACTER SET utf8mb4 
-COLLATE utf8mb4_unicode_ci;
 
-USE `photogallery`;
 
 -- Users table for authentication and management
 CREATE TABLE IF NOT EXISTS `users` (
@@ -358,3 +354,4 @@ DESCRIBE `statistics`;
 echo "Database schema created successfully!"
 echo "Default admin user: admin (password: password)"
 echo "Please change the default password after first login!"
+
