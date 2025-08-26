@@ -1,0 +1,82 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: exe/package-lock.json
+        
+    - name: Install dependencies
+      run: |
+        cd exe/
+        npm ci
+        
+    - name: Build desktop application
+      run: |
+        cd exe/
+        npm run build
+        
+    - name: Create release assets
+      run: |
+        mkdir -p release
+        cp -r exe/dist/* release/
+        cp -r *.php release/
+        cp -r img/ release/
+        cp -r data/ release/
+        cp -r styl.css release/
+        cp -r favicon.ico release/
+        cp env.example release/.env.example
+        cp db.sql release/
+        
+        # Create ZIP archive
+        cd release
+        zip -r ../photogallery-cms.zip .
+        cd ..
+        
+    - name: Upload release assets
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-files
+        path: |
+          photogallery-cms.zip
+          release/
+          
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Download release assets
+      uses: actions/download-artifact@v4
+      with:
+        name: release-files
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          photogallery-cms.zip
+        draft: false
+        prerelease: false
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
